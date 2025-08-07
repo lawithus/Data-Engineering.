@@ -84,14 +84,16 @@ credit_scoring_project/
 
 ⚙️ Tech Stack
 
-- *Kafka* - Data streaming
-- *Flink* - Real-time fraud processing
-- *Spark* - Risk score batch processing
-- *PostgreSQL* - Core data warehouse
-- *MongoDB* - Fraud alert storage
-- *Power BI* - Visual reporting
-- *Grafana + Prometheus* - Monitoring & metrics
-- *Docker Compose* - Environment orchestration
+| Layer            | Tool               |
+|------------------|--------------------|
+| Ingestion        | Apache Kafka       |
+| Streaming Engine | Apache Flink       |
+| Batch Processing | Apache Spark       |
+| Data Warehouse   | PostgreSQL         |
+| Alert Storage    | MongoDB            |
+| Dashboards       | Power BI           |
+| Monitoring       | Prometheus, Grafana|
+| Orchestration    | Docker Compose     |
 
 
 🧑‍💻 Setup Instructions
