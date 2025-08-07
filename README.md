@@ -104,6 +104,7 @@ Pipeline Design Summary:
 - Reporting Layer: Power BI pulls data from PostgreSQL for business intelligence.
 
  ETL Pipeline Diagram
+<img width="726" height="660" alt="image" src="https://github.com/user-attachments/assets/88c7d5da-a733-43b0-a149-41abc3afdb9b" />
 
 MongoDB ──▶ extract_mongo.py
                         │
