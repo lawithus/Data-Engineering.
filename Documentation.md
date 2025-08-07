@@ -150,5 +150,5 @@ Bad records logged in data_quality_issues
 👤 Maintainer
 
 *Author*: Larry Anesu  
-*GitHub*: github.com/larry0003  
-*Email*: lar…
+*GitHub*: github.com/lawithus
+*Email*: larryanesu@gmail.com
