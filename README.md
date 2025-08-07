@@ -56,9 +56,7 @@ A real-time, scalable data engineering project for credit risk analysis, fraud a
   - PostgreSQL acts as the central data warehouse.
 - Reporting Layer: Power BI pulls data from PostgreSQL for business intelligence.
 
-
  📂 Folder Structure
-
 
 credit_scoring_project/
 ├── docker-compose.yml
@@ -81,7 +79,6 @@ credit_scoring_project/
 ├── README.md
 └── DOCUMENTATION.md
 
-
 ⚙️ Tech Stack
 
 | Layer            | Tool               |
@@ -95,7 +92,6 @@ credit_scoring_project/
 | Monitoring       | Prometheus, Grafana|
 | Orchestration    | Docker Compose     |
 
-
 🧑‍💻 Setup Instructions
 
 1. Clone & Start
@@ -106,11 +102,9 @@ psql -U postgres -f storage/postgres_setup.sql
 mongo < storage/mongodb_setup.js
 
 3. Run Kafka Producer
-bash
 python ingestion/kafka_producer.py
 
-
-4. Run Spark Job
+4. Launch Spark Risk Job
 spark-submit processing/spark_jobs/credit_scoring_job.py
 
 📊 Dashboards
@@ -120,29 +114,30 @@ spark-submit processing/spark_jobs/credit_scoring_job.py
 - *Flink*: http://localhost:8081  
 - *Prometheus*: http://localhost:9090
 
+🔐 Data Governance
+- Access Control: DB-level credentials & RBAC
+- Lineage Tracking: Metadata logged in PostgreSQL
+- Audit Logs: Kafka logs + Spark job output
+- Policy Management: Thresholds & exceptions tracked in MongoDB + Power BI  
 
-🔒 Access Control
 
-- PostgreSQL user/password protected  
-- MongoDB accessible only via Docker network  
-- Local-only Kafka/Zookeeper access  
-- Dashboard login required
-
+✅ Data Quality Control
+- Validation at Ingestion (e.g., credit score range, nulls)
+- Spark Cleansing: Invalid records → data_quality_issues table
+- Metrics: Dropped records, fraud rates, Kafka lags
+- Alerts: Triggered via Grafana thresholds
+  
 📈 Monitoring
-
 Grafana dashboards visualize system throughput, job status, Kafka topics, and fraud alert volumes. Uses Prometheus to scrape metrics. 
 
 📤 Exporting & Reporting
-
 - Power BI reports can be exported to PDF
 - MongoDB alerts exportable via script
 - Grafana dashboards sharable as snapshots
 
 🪪 License
-
 MIT License — free to use, modify and share.
 
 📬 Contact
-
 *Maintainer:* lawithus  
 *Email:* larryanesu@gmail.com
