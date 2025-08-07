@@ -107,6 +107,59 @@ python ingestion/kafka_producer.py
 4. Launch Spark Risk Job
 spark-submit processing/spark_jobs/credit_scoring_job.py
 
+⚙️ Components and Scripts
+
+    Kafka Producer (Python) Simulates loan applications and streams to Kafka.
+
+ingestion/kafka_producer.py python from kafka import KafkaProducer import json, time, random
+
+producer = KafkaProducer( bootstrap_servers='localhost:9092', value_serializer=lambda v: json.dumps(v).encode('utf-8') )
+
+def generate_event(): return { "application_id": random.randint(1000, 9999), "user_id": random.randint(1, 100), "credit_score": random.randint(300, 850), "loan_amount": round(random.uniform(1000, 20000), 2), "timestamp": time.time() }
+
+while True: data = generate_event() producer.send('credit_applications', value=data) print("Sent:", data) time.sleep(2)
+
+    Flink Job (Pseudo) Detects fraud in real time.
+
+Logic:
+
+    If loan_amount > 15000 and credit_score < 450 → alert
+    Result stored in MongoDB.
+
+flink_jobs/fraud_detection.py python Pseudo-PyFlink if loan_amount > 15000 and credit_score < 450: emit_alert(application_id, reason="Risky transaction")
+
+    Spark Job Calculates risk scores from Kafka or HDFS and writes to PostgreSQL.
+
+processing/spark_jobs/credit_scoring_job.py python from pyspark.sql import SparkSession from pyspark.sql.functions import when
+
+spark = SparkSession.builder.appName("CreditScoring").getOrCreate()
+
+df = spark.read.json("hdfs://localhost:9000/kafka-data/credit_apps.json")
+
+df = df.withColumn("risk_level", when(df.credit_score >= 700, "Low") .when(df.credit_score >= 500, "Medium" .otherwise("High"))
+
+df.write.format("jdbc").option("url", "jdbc:postgresql://db:5432/creditdb")
+.option("dbtable", "credit_scores")
+.option("user", "postgres")
+.option("password", "admin")
+.mode("append").save()
+
+    PostgreSQL Setup
+
+storage/postgres_setup.sql sql CREATE TABLE credit_scores ( application_id INT, user_id INT, credit_score INT, loan_amount FLOAT, risk_level TEXT, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP );
+
+CREATE TABLE data_quality_issues ( record_id SERIAL, issue TEXT, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP );
+
+CREATE TABLE metadata_table ( job TEXT, source TEXT, target TEXT,
+
+    Access Control: DB roles and service authentication
+    Lineage: Metadata tracked in metadata_table
+    Policies:
+        Credit score ≥ 600 for low risk
+        Loan amount ≤ $15,000 for instant approval
+    Auditing: Logged via Kafka + Spark job logs
+
+
 📊 Dashboards
 
 - *Power BI*: Open `.pbix` file and connect to PostgreSQL  
