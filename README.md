@@ -46,8 +46,55 @@ A real-time, scalable data engineering project for credit risk analysis, fraud a
                   │   Power BI Dashboard        │ ◀─────────┘
                   │ Risk, Lending,Fraud Insights│
                   └─────────────────────────────┘          
+ETL Diagram
 
-🔁 Pipeline Design Summary:
+        ┌──────────────┐      ┌──────────────┐
+        │  MongoDB     │      │ PostgreSQL   │
+        │ (fraud data) │      │ (loan data)  │
+        └──────┬───────┘      └──────┬───────┘
+               │                     │
+     ┌─────────▼────────┐  ┌────────▼────────┐
+     │ extract_mongo.py │  │ extract_postgres│
+     └─────────┬────────┘  └────────┬────────┘
+               └────────┬───────────┘
+                        ▼
+                ┌────────────┐
+                │ transform  │
+                │  .py       │
+                └────┬───────┘
+                     ▼
+              ┌──────────────┐
+              │ load_to_dw   │
+              └────┬─────────┘
+                   ▼
+     ┌────────────────────────────┐
+     │ PostgreSQL Data Warehouse  │
+     └────────────┬───────────────┘
+                  ▼
+        ┌────────────────────┐
+        │ Power BI / Grafana │
+        └────────────────────┘
+        
+ETL Pipeline Summary
+
+1. Extract
+   - Pulls fraud data from MongoDB
+   - Pulls loan data from PostgreSQL
+
+2. Transform
+   - Cleans, joins, and enriches the data
+   - Flags fraud and assigns risk levels
+
+3. Load
+   - Loads the final dataset into a PostgreSQL Data Warehouse
+
+4. Visualize
+   - Dashboards in Power BI / Grafana for insights
+
+> Enables real-time analytics for credit scoring, lending, and fraud detection.
+        
+Pipeline Design Summary:
+
 - Ingestion: Kafka Producer streams new loan applications.
 - Streaming Layer: Flink processes applications in real-time and flags fraud.
 - Batch Layer: Spark calculates risk scores periodically and writes to the data warehouse.
@@ -55,6 +102,84 @@ A real-time, scalable data engineering project for credit risk analysis, fraud a
   - MongoDB for fast storage of fraud alerts.
   - PostgreSQL acts as the central data warehouse.
 - Reporting Layer: Power BI pulls data from PostgreSQL for business intelligence.
+
+ ETL Pipeline Diagram
+
+MongoDB ──▶ extract_mongo.py
+                        │
+PostgreSQL ─▶ extract_postgres.py
+                        ▼
+              🔄 transform.py
+                        ▼
+              📥 load_to_dw.py
+                        ▼
+     PostgreSQL Data Warehouse
+                        ▼
+             📊 Power BI Dashboard
+
+⚙️ Step-by-Step Breakdown
+
+1. 🔌 extract/extract_mongo.py
+
+python
+from pymongo import MongoClient
+import pandas as pd
+
+def extract_from_mongo():
+    client = MongoClient("mongodb://localhost:27017")
+    db = client.fraud_detection
+    collection = db.fraud_alerts
+    data = list(collection.find())
+    return pd.DataFrame(data)
+
+2. 🗃️ extract/extract_postgres.py
+
+python
+import pandas as pd
+from sqlalchemy import create_engine
+
+def extract_from_postgres():
+    engine = create_engine("postgresql://postgres:admin@localhost:5432/creditdb")
+    query = "SELECT * FROM credit_scores"
+    df = pd.read_sql(query, engine)
+    return df
+
+3. 🔄 transform/transform.py
+
+python
+def transform_data(loans_df, alerts_df):
+    # Join data on application_id
+    merged_df = loans_df.merge(alerts_df, on='application_id', how='left', suffixes=('', '_fraud'))
+    merged_df['is_fraud'] = merged_df['reason'].notnull()
+    return merged_df[['application_id', 'user_id', 'credit_score', 'loan_amount', 'risk_level', 'is_fraud']]
+
+4. 📥 load/load_to_dw.py
+
+python
+def load_to_data_warehouse(df):
+    from sqlalchemy import create_engine
+    engine = create_engine("postgresql://postgres:admin@localhost:5432/dw_finance")
+    df.to_sql("fact_loan_application", engine, if_exists="append", index=False)
+
+5. 🚀 run_etl.py
+
+python
+from extract.extract_mongo import extract_from_mongo
+from extract.extract_postgres import extract_from_postgres
+from transform.transform import transform_data
+from load.load_to_dw import load_to_data_warehouse
+
+mongo_df = extract_from_mongo()
+postgres_df = extract_from_postgres()
+transformed_df = transform_data(postgres_df, mongo_df)
+load_to_data_warehouse(transformed_df)
+
+✅ Result
+
+- Combines relational & document data
+- Enriches risk records with fraud info
+- Loads into star schema data warehouse
+             
 
  📂 Folder Structure
 
