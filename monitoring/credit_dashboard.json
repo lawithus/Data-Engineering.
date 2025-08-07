@@ -1,0 +1,70 @@
+json
+{
+  "dashboard": {
+    "id": null,
+    "title": "Credit Scoring & Fraud Detection",
+    "timezone": "browser",
+    "panels": [
+      {
+        "type": "stat",
+        "title": "Fraud Alerts (Last 24h)",
+        "targets": [
+          {
+            "expr": "count_over_time(mongodb_fraud_alerts_total[24h])",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 }
+      },
+      {
+        "type": "piechart",
+        "title": "Risk Level Distribution",
+        "targets": [
+          {
+            "expr": "sum by (risk_level) (credit_scores_total)",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 }
+      },
+      {
+        "type": "graph",
+        "title": "Kafka Consumer Lag",
+        "targets": [
+          {
+            "expr": "kafka_consumergroup_lag",
+            "refId": "A"
+          }
+        ],
+"gridPos": { "x": 0, "y": 4, "w": 12, "h": 4 }
+      },
+      {
+        "type": "stat",
+        "title": "Spark Jobs Processed (Last Hour)",
+        "targets": [
+          {
+            "expr": "sum(increase(spark_processed_records_total[1h]))",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "x": 0, "y": 8, "w": 6, "h": 4 }
+      },
+      {
+        "type": "gauge",
+        "title": "CPU Usage (%)",
+        "targets": [
+          {
+            "expr": "100 - (avg by (instance)(rate(node_cpu_seconds_total{mode=\"idle\"}[1m])) * 100)",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "x": 6, "y": 8, "w": 6, "h": 4 }
+      }
+    ],
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "10s"
+  }
+}
+
+
