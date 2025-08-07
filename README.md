@@ -1,6 +1,6 @@
 # Data-Engineering.
 
-Real Time Fraud Alerts and Credit Scoring
+Credit Scoring, Lending, Fraud Alerts and Risk Management Project
 
 💳 Credit Scoring, Lending & Fraud Detection Platform
 
@@ -97,17 +97,11 @@ credit_scoring_project/
 🧑‍💻 Setup Instructions
 
 1. Clone & Start
-bash
 git clone https://github.com/lawithus/Data-Engineering..git
-cd Data-Engineering
-docker-compose up -d
 
 2. Setup Databases
-bash
-
 psql -U postgres -f storage/postgres_setup.sql
 mongo < storage/mongodb_setup.js
-
 
 3. Run Kafka Producer
 bash
@@ -115,7 +109,6 @@ python ingestion/kafka_producer.py
 
 
 4. Run Spark Job
-bash
 spark-submit processing/spark_jobs/credit_scoring_job.py
 
 📊 Dashboards
