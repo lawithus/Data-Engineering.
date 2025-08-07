@@ -37,7 +37,7 @@ A real-time, scalable data engineering project for credit risk analysis, fraud a
                 │                      │
                 ▼                      ▼
      ┌──────────────────────┐   ┌──────────────────────┐
-     │ MongoDB (Fraud Alerts)│  │ PostgreSQL (Data WH) │◀────┐
+     │ MongoDB(Fraud Alerts)│   │ PostgreSQL (Data WH) │◀────┐
      └──────────────────────┘   └──────────────────────┘     │
                 │                        │                   │
                 └────────────┬───────────┘                   │
@@ -46,3 +46,108 @@ A real-time, scalable data engineering project for credit risk analysis, fraud a
                   │   Power BI Dashboard        │ ◀─────────┘
                   │ Risk, Lending,Fraud Insights│
                   └─────────────────────────────┘          
+
+🔁 Pipeline Design Summary:
+- Ingestion: Kafka Producer streams new loan applications.
+- Streaming Layer: Flink processes applications in real-time and flags fraud.
+- Batch Layer: Spark calculates risk scores periodically and writes to the data warehouse.
+- Storage:
+  - MongoDB for fast storage of fraud alerts.
+  - PostgreSQL acts as the central data warehouse.
+- Reporting Layer: Power BI pulls data from PostgreSQL for business intelligence.
+
+
+ 📂 Folder Structure
+
+
+credit_scoring_project/
+├── docker-compose.yml
+├── ingestion/
+│   └── kafka_producer.py
+├── processing/
+│   └── spark_jobs/
+│       └── credit_scoring_job.py
+├── storage/
+│   ├── postgres_setup.sql
+│   └── mongodb_setup.js
+├── dashboards/
+│   └── powerbi_reports/
+│       └── credit_scoring_report.pbix
+├── monitoring/
+│   ├── prometheus.yml
+│   └── grafana/
+│       └── dashboards/
+│           └── credit_dashboard.json
+├── README.md
+└── DOCUMENTATION.md
+
+
+⚙️ Tech Stack
+
+- *Kafka* - Data streaming
+- *Flink* - Real-time fraud processing
+- *Spark* - Risk score batch processing
+- *PostgreSQL* - Core data warehouse
+- *MongoDB* - Fraud alert storage
+- *Power BI* - Visual reporting
+- *Grafana + Prometheus* - Monitoring & metrics
+- *Docker Compose* - Environment orchestration
+
+
+🧑‍💻 Setup Instructions
+
+1. Clone & Start
+bash
+git clone https://github.com/lawithus/Data-Engineering..git
+cd Data-Engineering
+docker-compose up -d
+
+2. Setup Databases
+bash
+
+psql -U postgres -f storage/postgres_setup.sql
+mongo < storage/mongodb_setup.js
+
+
+3. Run Kafka Producer
+bash
+python ingestion/kafka_producer.py
+
+
+4. Run Spark Job
+bash
+spark-submit processing/spark_jobs/credit_scoring_job.py
+
+📊 Dashboards
+
+- *Power BI*: Open `.pbix` file and connect to PostgreSQL  
+- *Grafana*: http://localhost:3000 (admin/admin)  
+- *Flink*: http://localhost:8081  
+- *Prometheus*: http://localhost:9090
+
+
+🔒 Access Control
+
+- PostgreSQL user/password protected  
+- MongoDB accessible only via Docker network  
+- Local-only Kafka/Zookeeper access  
+- Dashboard login required
+
+📈 Monitoring
+
+Grafana dashboards visualize system throughput, job status, Kafka topics, and fraud alert volumes. Uses Prometheus to scrape metrics. 
+
+📤 Exporting & Reporting
+
+- Power BI reports can be exported to PDF
+- MongoDB alerts exportable via script
+- Grafana dashboards sharable as snapshots
+
+🪪 License
+
+MIT License — free to use, modify and share.
+
+📬 Contact
+
+*Maintainer:* lawithus  
+*Email:* larryanesu@gmail.com
