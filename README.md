@@ -179,7 +179,122 @@ load_to_data_warehouse(transformed_df)
 - Combines relational & document data
 - Enriches risk records with fraud info
 - Loads into star schema data warehouse
-             
+
+Datawarehouse Model
+
+A Star Schema is used to support analytics for credit scoring, risk, and fraud detection.
+
+
+🌟 Fact Table
+
+fact_loan_application
+
+| Column              | Description                          |
+|---------------------|--------------------------------------|
+| application_id      | Unique loan application ID           |
+| user_id             | Reference to user dimension          |
+| time_id             | Reference to time dimension          |
+| credit_score        | Numeric score from bureau            |
+| loan_amount         | Loan requested                       |
+| risk_level          | Derived risk category (Low/Med/High) |
+| is_fraud            | Flag from fraud detection system     |
+| approval_status     | Approved, Rejected, Under Review     |
+
+📐 Dimension Tables
+
+dim_user
+| Column       | Description             |
+|--------------|-------------------------|
+| user_id      | Primary key             |
+| name         | (Optional for reporting)|
+| age          | Age of applicant        |
+| gender       | Gender                  |
+| region       | Location info           |
+
+dim_time
+| Column      | Description             |
+|-------------|-------------------------|
+| time_id     | Surrogate key           |
+| date        | Actual date             |
+| month       | Month name              |
+| quarter     | Q1–Q4                   |
+| year        | Calendar year           |
+
+dim_risk
+| Column       | Description             |
+|--------------|-------------------------|
+| risk_level   | Low, Medium, High       |
+| description  | Risk interpretation     |
+
+dim_status
+| Column         | Description           |
+|----------------|-----------------------|
+| status_code    | Approved, Rejected    |
+| explanation    | Business meaning      |
+
+SQL DDL scripts to create the data warehouse schema (star schema) for the credit scoring and lending project
+
+
+📐 dim_user
+
+sql
+CREATE TABLE dim_user (
+    user_id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    age INT,
+    gender VARCHAR(10),
+    region VARCHAR(50)
+);
+
+
+
+📅 dim_time
+
+sql
+CREATE TABLE dim_time (
+    time_id SERIAL PRIMARY KEY,
+    date DATE,
+    month VARCHAR(15),
+    quarter VARCHAR(5),
+    year INT
+);
+
+
+
+⚠️ dim_risk
+
+sql
+CREATE TABLE dim_risk (
+    risk_level VARCHAR(10) PRIMARY KEY,
+    description TEXT
+);
+
+
+
+📄 dim_status
+
+sql
+CREATE TABLE dim_status (
+    status_code VARCHAR(20) PRIMARY KEY,
+    explanation TEXT
+);
+
+
+🌟 fact_loan_application
+
+sql
+CREATE TABLE fact_loan_application (
+    application_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES dim_user(user_id),
+    time_id INT REFERENCES dim_time(time_id),
+    credit_score INT,
+    loan_amount NUMERIC(12,2),
+    risk_level VARCHAR(10) REFERENCES dim_risk(risk_level),
+    is_fraud BOOLEAN,
+    approval_status VARCHAR(20) REFERENCES dim_status(status_code)
+);
+
+
 
  📂 Folder Structure
 
@@ -522,9 +637,104 @@ Ensures the pipeline delivers accurate, complete, and clean data at all times.
   - Number of fraud alerts
 - Grafana dashboard shows:
   - “Data Quality Events”
-  - Anomalie…
+  - Anomalies
+ 
+🔍 1. Data Quality Checks
+
+a. Null or Missing Values
+python
+if df['credit_score'].isnull().any():
+    log_warning("Missing credit scores detected")
 
 
+b. Valid Range Checks
+python
+assert df['credit_score'].between(300, 850).all(), "Invalid credit scores"
+assert df['loan_amount'].gt(0).all(), "Loan amounts must be positive"
+
+
+c. Duplicate Detection
+python
+duplicates = df[df.duplicated(subset='application_id')]
+
+d. Schema Validation
+Use great_expectations or custom assertions to verify expected columns and data types.
+
+🔔 2. Monitoring
+
+a. Logging
+- Log issues to data_quality_issues table
+- Include timestamp, record ID, and failure reason
+
+b. Metrics Collection
+Use Prometheus to track:
+- Number of invalid records
+- Missing fields per batch
+- ETL job durations
+
+yaml
+Custom metric in ETL script
+data_quality_invalid_count{check="missing_credit_score"} 12
+
+c. Alerts
+Set up Grafana alerts:
+- If >5% of records are invalid
+- If ETL job fails or slows down
+- If fraud spikes over threshold
+
+📊 Example Quality Table
+
+| id | timestamp           | check_type         | failed_record_id | reason               |
+|----|---------------------|--------------------|------------------|----------------------|
+| 1  | 2025-08-07 12:01:00 | missing_credit     | 10021            | credit_score is null|
+| 2  | 2025-08-07 12:01:00 | invalid_loan_value | 10025            | loan_amount < 0     |
+
+Data Governance Implementation
+
+🔐 1. Data Security
+- Role-Based Access Control (RBAC)  
+  - Grant least-privilege access by role (e.g. Analyst, Engineer, Admin)
+  - Use PostgreSQL GRANT/REVOKE and MongoDB roles
+
+- Encryption
+  - At-rest: Enable disk/database encryption
+  - In-transit: Use SSL/TLS for all connections
+
+- Audit Logs
+  - Track data access, queries, inserts, updates, and deletions
+
+🛡️ 2. Data Privacy
+
+- Masking Sensitive Data  
+  - Hide personal identifiers (e.g. names, ID numbers) in dev environments
+
+- Anonymization/Pseudonymization  
+  - Replace PII fields before analysis (e.g. user_id → token)
+
+- Consent Tracking  
+  - Record user consent status and apply opt-out logic
+
+📜 3. Compliance
+
+- Align with frameworks such as:
+  - GDPR (EU)
+  - CCPA (California)
+  - PCI DSS (for financial data)
+
+- Data Retention Policies  
+  - Auto-delete or archive data older than X years
+
+- Data Lineage & Cataloging  
+  - Use tools like OpenMetadata or Amundsen to track data flow
+
+✅ Tools to Support Governance
+
+| Area         | Tool              |
+|--------------|-------------------|
+| Access Ctrl  | PostgreSQL Roles, MongoDB Auth  |
+| Auditing     | db logs, Flink Kafka audit logs |
+| Masking      | Python Pandas, SQL Views        |
+| Lineage      | OpenMetadata, DataHub           |
 
 ⚙️ Components and Scripts
 
